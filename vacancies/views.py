@@ -67,6 +67,7 @@ class CompanyView(TemplateView):
             'title': models.Company.objects.get(id=id).name,
             'prev_page': self.request.META.get('HTTP_REFERER'),
             'logo_img': models.Company.objects.get(id=id).logo,
+            'city': models.Company.objects.get(id=id).location
         }
 
         return context
