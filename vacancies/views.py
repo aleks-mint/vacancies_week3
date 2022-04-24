@@ -2,7 +2,7 @@ from django.db.models import Count
 from django.http import HttpResponseNotFound, HttpResponseServerError
 from django.views.generic import ListView, TemplateView, DetailView
 
-from vacancies import models
+from vacancies.models import Specialty, Vacancy, Company
 
 
 class MainView(TemplateView):
@@ -11,22 +11,21 @@ class MainView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context = {
-            'specialties': models.Specialty.objects.annotate(vacancies_count=Count('vacancies')),
-            'companies': models.Company.objects.all(),
-            'vacancies': models.Vacancy.objects.all(),
+            'specialties': Specialty.objects.annotate(vacancies_count=Count('vacancies')),
+            'companies': Company.objects.annotate(vacancies_count=Count('vacancies')),
         }
 
         return context
 
 
 class VacanciesListView(ListView):
-    model = models.Vacancy
+    model = Vacancy
     template_name = 'vacancies.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context = {
-            'vacancies': models.Vacancy.objects.all(),
+            'vacancies': Vacancy.objects.all(),
             }
 
         return context
@@ -38,8 +37,8 @@ class VacanciesCatView(TemplateView):
     def get_context_data(self, category, **kwargs):
         context = super().get_context_data(**kwargs)
         context = {
-            'vacancies': models.Vacancy.objects.filter(specialty__code=category),
-            'title': models.Specialty.objects.get(code=category).title,
+            'vacancies': Vacancy.objects.filter(specialty__code=category),
+            'title': Specialty.objects.get(code=category).title,
         }
 
         return context
@@ -48,8 +47,8 @@ class VacanciesCatView(TemplateView):
 class VacancyView(DetailView):
     template_name = "vacancy.html"
     pk_url_kwarg = 'id'
-    model = models.Vacancy
-    queryset = models.Vacancy.objects.select_related('company').all()
+    model = Vacancy
+    queryset = Vacancy.objects.select_related('company').all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -63,11 +62,9 @@ class CompanyView(TemplateView):
     def get_context_data(self, id, **kwargs):
         context = super().get_context_data(**kwargs)
         context = {
-            'vacancies': models.Vacancy.objects.filter(company__id=id),
-            'title': models.Company.objects.get(id=id).name,
+            'vacancies': Vacancy.objects.filter(company__id=id),
+            'company': Company.objects.get(id=id),
             'prev_page': self.request.META.get('HTTP_REFERER'),
-            'logo_img': models.Company.objects.get(id=id).logo,
-            'city': models.Company.objects.get(id=id).location
         }
 
         return context
